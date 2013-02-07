@@ -27,73 +27,105 @@ import com.gargoylesoftware.htmlunit.HttpMethod;
 import com.gargoylesoftware.htmlunit.WebRequestSettings;
 import com.gargoylesoftware.htmlunit.html.HtmlForm;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
-
 import hudson.cli.CLI;
+import hudson.model.Descriptor;
 import hudson.model.FreeStyleProject;
 import hudson.model.ParametersDefinitionProperty;
 import hudson.model.Queue;
+import hudson.tasks.Builder;
+import hudson.util.DescribableList;
+import java.io.IOException;
 import java.net.URL;
 import java.util.Arrays;
 import org.apache.commons.httpclient.NameValuePair;
-import org.junit.Ignore;
+import org.eclipse.hudson.api.model.IBaseBuildableProject;
 import org.jvnet.hudson.test.CaptureEnvironmentBuilder;
 import org.jvnet.hudson.test.HudsonTestCase;
 
 /**
  * Test interaction of BuildSelectorParameter with Jenkins core.
+ *
  * @author Alan Harder
  */
 public class BuildSelectorParameterTest extends HudsonTestCase {
+    
+    protected void addBuilder(FreeStyleProject up, Builder builder) throws Exception {
+      DescribableList<Builder, Descriptor<Builder>> buildersList = up.getBuildersList();
+      buildersList.add(builder);
+      up.setBuilders(buildersList);
+    }
+    
+    protected void replaceBuilder(IBaseBuildableProject up, Builder newBuilder) throws IOException  {
+      DescribableList<Builder, Descriptor<Builder>> buildersList = up.getBuildersList();
+      buildersList.replace(newBuilder);
+      up.setBuilders(buildersList);
+    }
 
     /**
      * Verify BuildSelectorParameter works via HTML form, http POST and CLI.
      */
-    @Ignore
     public void testParameter() throws Exception {
         FreeStyleProject job = createFreeStyleProject();
         job.addProperty(new ParametersDefinitionProperty(
                 new BuildSelectorParameter("SELECTOR", new StatusBuildSelector(false), "foo")));
         CaptureEnvironmentBuilder ceb = new CaptureEnvironmentBuilder();
-        job.getBuildersList().add(ceb);
+        addBuilder(job, ceb);
 
         // Run via UI (HTML form)
-        WebClient wc = this.createWebClient();
+        WebClient wc = new WebClient();
         // Jenkins sends 405 response for GET of build page.. deal with that:
-        wc.setThrowExceptionOnFailingStatusCode(true);
-        wc.setPrintContentOnFailingStatusCode(true);
-        HtmlPage wp = wc.getPage(job, "build");
-        HtmlForm form =	wp.getFormByName("parameters");
+        wc.setThrowExceptionOnFailingStatusCode(false);
+        wc.setPrintContentOnFailingStatusCode(false);
+        
+        wc.setThrowExceptionOnScriptError(false);
+        
+        HtmlPage page = wc.getPage(job, "build");
+        
+        HtmlForm form = page.getFormByName("parameters");
+        
         form.getSelectByName("").getOptionByText("Specific build").setSelected(true);
         form.getInputByName("buildNumber").setValueAttribute("6");
         submit(form);
         Queue.Item q = hudson.getQueue().getItem(job);
-        if (q != null) q.getFuture().get();
-        while (job.getLastBuild().isBuilding()) Thread.sleep(100);
-        assertEquals("<SpecificBuildSelector><buildNumber>6</buildNumber></SpecificBuildSelector>",
-                     ceb.getEnvVars().get("SELECTOR").replaceAll("\\s+", ""));
-        job.getBuildersList().replace(ceb = new CaptureEnvironmentBuilder());
+        if (q != null) {
+            q.getFuture().get();
+        }
+        while (job.getLastBuild().isBuilding()) {
+            Thread.sleep(100);
+        }
+        assertEquals("<hudson.plugins.copyartifact.SpecificBuildSelector><buildNumber>6</buildNumber></hudson.plugins.copyartifact.SpecificBuildSelector>",
+                ceb.getEnvVars().get("SELECTOR").replaceAll("\\s+", ""));
+        replaceBuilder(job, ceb = new CaptureEnvironmentBuilder());
 
         // Run via HTTP POST (buildWithParameters)
         WebRequestSettings post = new WebRequestSettings(
-                new URL(getURL(), job.getUrl()+"/buildWithParameters"), HttpMethod.POST);
+                new URL(getURL(), job.getUrl() + "/buildWithParameters"), HttpMethod.POST);
         wc.addCrumb(post);
-        String xml = "<StatusBuildSelector><stable>true</stable></StatusBuildSelector>";
+        String xml = "<hudson.plugins.copyartifact.StatusBuildSelector><stable>true</stable></hudson.plugins.copyartifact.StatusBuildSelector>";
         post.setRequestParameters(Arrays.asList(new NameValuePair("SELECTOR", xml),
-                                                post.getRequestParameters().get(0)));
+                post.getRequestParameters().get(0)));
         wc.getPage(post);
         q = hudson.getQueue().getItem(job);
-        if (q != null) q.getFuture().get();
-        while (job.getLastBuild().isBuilding()) Thread.sleep(100);
+        if (q != null) {
+            q.getFuture().get();
+        }
+        while (job.getLastBuild().isBuilding()) {
+            Thread.sleep(100);
+        }
         assertEquals(xml, ceb.getEnvVars().get("SELECTOR"));
-        job.getBuildersList().replace(ceb = new CaptureEnvironmentBuilder());
+        replaceBuilder(job, ceb = new CaptureEnvironmentBuilder());
 
         // Run via CLI
         CLI cli = new CLI(getURL());
         assertEquals(0, cli.execute(
-                "build", job.getFullName(), "-p", "SELECTOR=<SavedBuildSelector/>"));
+                "build", job.getFullName(), "-p", "SELECTOR=<hudson.plugins.copyartifact.SavedBuildSelector/>"));
         q = hudson.getQueue().getItem(job);
-        if (q != null) q.getFuture().get();
-        while (job.getLastBuild().isBuilding()) Thread.sleep(100);
-        assertEquals("<SavedBuildSelector/>", ceb.getEnvVars().get("SELECTOR"));
+        if (q != null) {
+            q.getFuture().get();
+        }
+        while (job.getLastBuild().isBuilding()) {
+            Thread.sleep(100);
+        }
+        assertEquals("<hudson.plugins.copyartifact.SavedBuildSelector/>", ceb.getEnvVars().get("SELECTOR"));
     }
 }

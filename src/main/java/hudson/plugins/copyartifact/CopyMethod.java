@@ -35,7 +35,7 @@ import java.io.IOException;
  *      If you were taking an instance of this interface, use {@link Copier#from()}
  *      to wrap it as a {@link Copier}
  */
-public interface CopyMethod extends ExtensionPoint {
+public interface CopyMethod extends ExtensionPoint{
 
     /**
      * Called before copy-artifact operation.

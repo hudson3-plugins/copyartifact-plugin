@@ -5,8 +5,8 @@ import hudson.FilePath;
 import hudson.Util;
 import hudson.model.AbstractBuild;
 import hudson.model.Fingerprint;
-import hudson.model.Hudson;
 import hudson.model.FingerprintMap;
+import hudson.model.Hudson;
 import hudson.model.Run;
 import hudson.tasks.Fingerprinter.FingerprintAction;
 import hudson.util.IOException2;
@@ -17,6 +17,8 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Performs fingerprinting during the copy.
@@ -28,6 +30,8 @@ import java.util.Map;
  */
 @Extension(ordinal=-100)
 public class FingerprintingCopyMethod extends Copier {
+
+    private static final Logger LOGGER = Logger.getLogger(FingerprintingCopyMethod.class.getName());
     /**
      * Null if the source of the copy operation isn't {@link AbstractBuild} but some other Run type.
      */
@@ -75,8 +79,17 @@ public class FingerprintingCopyMethod extends Copier {
             } finally {
                 out.close();
             }
-            d.chmod(s.mode());
-            d.touch(s.lastModified());
+            //{
+                d.chmod(s.mode());
+//            } catch (PosixException x) {
+//                LOGGER.log(Level.WARNING, "could not check mode of " + s, x);
+//            }
+            // FilePath.setLastModifiedIfPossible private; copyToWithPermission OK but would have to calc digest separately:
+            try {
+                d.touch(s.lastModified());
+            } catch (IOException x) {
+                LOGGER.warning(x.getMessage());
+            }
             String digest = Util.toHexString(md5.digest());
 
             FingerprintMap map = Hudson.getInstance().getFingerprintMap();

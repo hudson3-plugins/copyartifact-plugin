@@ -4,14 +4,14 @@
     <parent>
         <groupId>org.eclipse.hudson.plugins</groupId>
         <artifactId>hudson-plugin-parent</artifactId>
-        <version>3.0.0-RC3</version>
+        <version>3.0.0</version>
     </parent>
 
     <groupId>org.hudsonci.plugins</groupId>
     <artifactId>copyartifact</artifactId>
     <packaging>hpi</packaging>
     <name>Copy Artifact Plugin</name>
-    <version>1.23-h-1-SNAPSHOT</version>
+    <version>1.25-h-1-SNAPSHOT</version>
     <url>http://wiki.hudson-ci.org/display/HUDSON/Copy+Artifact+Plugin</url>
 
     <developers>
@@ -56,6 +56,4 @@
       <developerConnection>scm:git:git@github.com:hudson3-plugins/copyartifact-plugin.git</developerConnection>
       <url>https://github.com/hudson3-plugins/copyartifact-plugin</url>
     </scm>
-</project>  
-  
-
+</project>

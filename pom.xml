@@ -11,7 +11,7 @@
     <artifactId>copyartifact</artifactId>
     <packaging>hpi</packaging>
     <name>Copy Artifact Plugin</name>
-    <version>1.25-h-2-SNAPSHOT</version>
+    <version>1.25-h-2</version>
     <url>http://wiki.hudson-ci.org/display/HUDSON/Copy+Artifact+Plugin</url>
 
     <developers>

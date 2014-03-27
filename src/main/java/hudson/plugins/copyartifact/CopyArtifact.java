@@ -64,6 +64,7 @@ import hudson.util.XStream2;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -77,8 +78,8 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
-import org.springframework.security.GrantedAuthority;
-import org.springframework.security.providers.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 
 /**
  * Build step to copy artifacts from another project.
@@ -167,7 +168,7 @@ public class CopyArtifact extends Builder {
                 // to select jobs which are accessible to all authenticated users.
                 && !job.job.getACL().hasPermission(
                         new UsernamePasswordAuthenticationToken("authenticated", "",
-                                new GrantedAuthority[]{ SecurityRealm.AUTHENTICATED_AUTHORITY }),
+                                Arrays.asList(new GrantedAuthority[]{ SecurityRealm.AUTHENTICATED_AUTHORITY })),
                         Item.READ)) {
                 job.job = null; // Disallow access
             }

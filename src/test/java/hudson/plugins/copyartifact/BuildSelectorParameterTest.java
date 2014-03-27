@@ -27,6 +27,7 @@ import com.gargoylesoftware.htmlunit.HttpMethod;
 import com.gargoylesoftware.htmlunit.WebRequestSettings;
 import com.gargoylesoftware.htmlunit.html.HtmlForm;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import hudson.EnvVars;
 import hudson.cli.CLI;
 import hudson.model.Descriptor;
 import hudson.model.FreeStyleProject;
@@ -93,7 +94,9 @@ public class BuildSelectorParameterTest extends HudsonTestCase {
         while (job.getLastBuild().isBuilding()) {
             Thread.sleep(100);
         }
-        assertEquals("<hudson.plugins.copyartifact.SpecificBuildSelector><buildNumber>6</buildNumber></hudson.plugins.copyartifact.SpecificBuildSelector>",
+		//???
+        //assertEquals("<hudson.plugins.copyartifact.SpecificBuildSelector><buildNumber>6</buildNumber></hudson.plugins.copyartifact.SpecificBuildSelector>",
+        assertEquals("<SpecificBuildSelector><buildNumber>6</buildNumber></SpecificBuildSelector>",
                 ceb.getEnvVars().get("SELECTOR").replaceAll("\\s+", ""));
         replaceBuilder(job, ceb = new CaptureEnvironmentBuilder());
 
